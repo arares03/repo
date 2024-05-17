@@ -59,7 +59,4 @@ public class Room {
         this.isAvailable = isAvailable;
     }
 
-
-    // Getters and setters
-    // Omitted for brevity
 }

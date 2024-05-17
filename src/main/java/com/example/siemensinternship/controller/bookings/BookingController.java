@@ -19,9 +19,13 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api")
@@ -107,4 +111,89 @@ public class BookingController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to add booking");
         }
     }
+
+    @PatchMapping("/bookings/{bookingId}/{timestamp}")
+    public ResponseEntity<String> cancelBooking(@PathVariable String bookingId, @PathVariable String timestamp) {
+        try {
+            // Parse timestamp string into Instant
+            Instant providedTimestamp = Instant.parse(timestamp);
+
+            // Load existing bookings from JSON file
+            Resource resource = resourceLoader.getResource("classpath:mock-data/bookings.json");
+            File file = resource.getFile();
+
+            // Read existing JSON data
+            ObjectMapper objectMapper = new ObjectMapper();
+            List<Booking> bookings = objectMapper.readValue(file, new TypeReference<List<Booking>>() {});
+
+            // Find the booking with the specified ID
+            Optional<Booking> optionalBooking = bookings.stream()
+                    .filter(booking -> booking.getId().equals(bookingId))
+                    .findFirst();
+
+            if (optionalBooking.isPresent()) {
+                Booking booking = optionalBooking.get();
+                Instant bookingTimestamp = Instant.parse(booking.getTimestamp());
+
+                // Compare the provided timestamp with the booking's timestamp
+                if (isFirstTimestampBeforeSecond(bookingTimestamp, providedTimestamp)) {
+                    // Provided timestamp is at least 2 hours after the booking's timestamp, proceed with canceling the booking
+
+                    // Remove the booking from the list
+                    bookings.remove(booking);
+
+                    // Write the updated list back to the JSON file
+                    objectMapper.writeValue(file, bookings);
+
+                    return ResponseEntity.ok("Booking with ID " + bookingId + " canceled successfully");
+                } else {
+                    // Provided timestamp is not at least 2 hours after the booking's timestamp, return a bad request response
+                    return ResponseEntity.badRequest().body("Provided timestamp must be at least 2 hours after the booking's timestamp");
+                }
+            } else {
+                // If the booking with the specified ID was not found, return a 404 Not Found response
+                return ResponseEntity.notFound().build();
+            }
+        } catch (DateTimeParseException e) {
+            // Handle parsing exception
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body("Failed to parse timestamp");
+        } catch (IOException e) {
+            // Handle any other IO exceptions
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to cancel booking");
+        }
+    }
+
+    // Method to check if the first timestamp is at least 2 hours before the second timestamp
+    public static boolean isFirstTimestampBeforeSecond(Instant firstTimestamp, Instant secondTimestamp) {
+        // Calculate the duration between the two timestamps
+        Duration duration = Duration.between(firstTimestamp, secondTimestamp);
+
+        // Check if the duration is at least 2 hours
+        return duration.toHours() >= 2;
+    }
+
+    @DeleteMapping("/bookings")
+    public ResponseEntity<String> deleteAllBookings() { //functie creata pentru testare!!
+        try {
+            // Load existing bookings from JSON file
+            Resource resource = resourceLoader.getResource("classpath:mock-data/bookings.json");
+            File file = resource.getFile();
+
+            // Clear the list of bookings
+            List<Booking> bookings = Collections.emptyList();
+
+            // Write the empty list back to the JSON file
+            ObjectMapper objectMapper = new ObjectMapper();
+            objectMapper.writeValue(file, bookings);
+
+            return ResponseEntity.ok("All bookings deleted successfully");
+        } catch (IOException e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to delete bookings");
+        }
+    }
+
+
 }
