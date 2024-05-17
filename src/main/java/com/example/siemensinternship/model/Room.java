@@ -10,6 +10,9 @@ public class Room {
     public void setRoomNumber(int roomNumber) {
         this.roomNumber = roomNumber;
     }
+    public boolean getIsAvailable(){
+        return isAvailable;
+    }
 
     public void setType(int type) {
         this.type = type;
@@ -55,6 +58,7 @@ public class Room {
         this.price = price;
         this.isAvailable = isAvailable;
     }
+
 
     // Getters and setters
     // Omitted for brevity

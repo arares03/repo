@@ -2,13 +2,13 @@ package com.example.siemensinternship.model;
 import java.util.List;
 
 public class Hotel {
-    private long id;
+    private int id;
 
-    public long getId() {
+    public int getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(int id) {
         this.id = id;
     }
 
@@ -44,12 +44,14 @@ public class Hotel {
         this.rooms = rooms;
     }
 
-    public Hotel(long id, String name, double latitude, double longitude, List<Room> rooms) {
+    public Hotel(int id, String name, double latitude, double longitude, List<Room> rooms) {
         this.id = id;
         this.name = name;
         this.latitude = latitude;
         this.longitude = longitude;
         this.rooms = rooms;
+    }
+    public Hotel() {
     }
 
     private String name;
