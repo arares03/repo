@@ -9,8 +9,6 @@ public class Booking {
     private int hotelId;
     private int roomNumber;
 
-    // Constructors, getters, and setters
-
     public Booking() {
     }
 
